@@ -1,31 +1,42 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import AdminHeader from "../../components/admin/AdminHeader";
+import { useParams } from "react-router-dom";
+import {
+  useGetSingleUserMutation,
+  useUpdateUserDataMutation,
+} from "../../slices/adminSlice/adminApiSlice";
+import { useEffect, useState } from "react";
+import { AiOutlineLock, AiOutlineMail, AiOutlineUser } from "react-icons/ai";
 import { toast } from "react-toastify";
-import Loader from "../../components/user/Loader";
-import { setCredentials } from "../../slices/userSlice/authSlice";
-import { useUpdateUserMutation } from "../../slices/userSlice/usersApiSlice";
-import { AiOutlineUser, AiOutlineMail, AiOutlineLock } from "react-icons/ai";
-import Header from "../../components/user/Header";
 
-const Profile = () => {
+const EditUser = () => {
+  const { userId } = useParams();
+
+  const [id, setId] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [imageUrl, setImageUrl] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
 
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  const { userInfo } = useSelector((state) => state.auth);
-
-  const [updateProfile, { isLoading }] = useUpdateUserMutation();
+  const [getSingleUser, { isLoading }] = useGetSingleUserMutation();
+  const [updateUserData] = useUpdateUserDataMutation();
 
   useEffect(() => {
-    setName(userInfo.name);
-    setEmail(userInfo.email);
-  }, [userInfo.setName, userInfo.setEmail]);
+    const fetchSingleUser = async () => {
+      try {
+        const { data } = await getSingleUser(userId);
+        console.log(data);
+        setId(data._id);
+        setName(data.name);
+        setEmail(data.email);
+        setImageUrl(data.imageUrl);
+      } catch (err) {
+        console.error("Error fetching user data", err);
+      }
+    };
+    fetchSingleUser();
+  }, [userId]);
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -38,6 +49,7 @@ const Profile = () => {
     } else {
       try {
         const formData = new FormData();
+        formData.append("userId", id);
         formData.append("name", name);
         formData.append("email", email);
         formData.append("password", password);
@@ -45,8 +57,8 @@ const Profile = () => {
           formData.append("image", selectedFile);
         }
 
-        const res = await updateProfile(formData).unwrap();
-        dispatch(setCredentials({ ...res }));
+        const res = await updateUserData(formData).unwrap();
+        // console.log("res", res);
         toast.success("Profile Updated");
       } catch (err) {
         toast.error(err?.data?.message || err.error);
@@ -57,14 +69,14 @@ const Profile = () => {
 
   return (
     <>
-      <Header />
+      <AdminHeader />
       <div className="max-w-md mx-auto my-16 bg-white shadow-md rounded-md p-6">
         <h1 className="text-2xl font-bold mb-4 text-indigo-600">Profile</h1>
         <div className="flex justify-center mb-6">
           <div className="relative">
             {/* Image Display */}
             <img
-              src={userInfo.imageUrl}
+              src={imageUrl}
               alt="Profile Image"
               className="h-32 w-32 rounded-full object-cover"
             />
@@ -170,7 +182,7 @@ const Profile = () => {
             </div>
           </div>
 
-          {isLoading && <Loader />}
+          {/* {isLoading && <Loader />} */}
 
           <button
             type="submit"
@@ -184,4 +196,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default EditUser;
