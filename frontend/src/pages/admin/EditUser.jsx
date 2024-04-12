@@ -7,6 +7,7 @@ import {
 import { useEffect, useState } from "react";
 import { AiOutlineLock, AiOutlineMail, AiOutlineUser } from "react-icons/ai";
 import { toast } from "react-toastify";
+import editUserValidate from "../../validations/editUserValidate";
 
 const EditUser = () => {
   const { userId } = useParams();
@@ -44,21 +45,23 @@ const EditUser = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+
+    // Extract form data
+    const formData = new FormData();
+    formData.append("userId", id);
+    formData.append("name", name);
+    formData.append("email", email);
+    formData.append("password", password);
+    if (selectedFile) {
+      formData.append("image", selectedFile);
+    }
+
+    const validationError = editUserValidate(name, password, confirmPassword);
+    if (validationError) {
+      toast.error(validationError);
     } else {
       try {
-        const formData = new FormData();
-        formData.append("userId", id);
-        formData.append("name", name);
-        formData.append("email", email);
-        formData.append("password", password);
-        if (selectedFile) {
-          formData.append("image", selectedFile);
-        }
-
         const res = await updateUserData(formData).unwrap();
-        // console.log("res", res);
         toast.success("Profile Updated");
       } catch (err) {
         toast.error(err?.data?.message || err.error);
@@ -71,7 +74,9 @@ const EditUser = () => {
     <>
       <AdminHeader />
       <div className="max-w-md mx-auto my-16 bg-white shadow-md rounded-md p-6">
-        <h1 className="text-2xl font-bold mb-4 text-indigo-600">Profile</h1>
+        <h1 className="text-2xl font-bold mb-4 text-indigo-600">
+          Edit User Details
+        </h1>
         <div className="flex justify-center mb-6">
           <div className="relative">
             {/* Image Display */}
@@ -137,7 +142,7 @@ const EditUser = () => {
                 type="email"
                 placeholder="Enter email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                readOnly
                 className="block w-full pr-10 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">

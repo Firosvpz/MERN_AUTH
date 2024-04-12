@@ -1,8 +1,10 @@
 import { AiOutlineLock, AiOutlineMail, AiOutlineUser } from "react-icons/ai";
 import AdminHeader from "../../components/admin/AdminHeader";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAddUserMutation } from "../../slices/adminSlice/adminApiSlice";
 import { toast } from "react-toastify";
+import signUpValidate from "../../validations/signUpValidate.js";
+
 
 const AddUser = () => {
   const [name, setName] = useState("");
@@ -20,8 +22,14 @@ const AddUser = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+    const validationError = signUpValidate(
+      name,
+      email,
+      password,
+      confirmPassword
+    );
+    if (validationError) {
+      toast.error(validationError);
     } else {
       try {
         const formData = new FormData();
@@ -35,6 +43,7 @@ const AddUser = () => {
         const res = await addUser(formData).unwrap();
         // console.log("res", res);
         toast.success("User has been created successfully");
+        // navigate("/admin/dashboard");
       } catch (err) {
         toast.error(err?.data?.message || err.error);
         console.log(err);

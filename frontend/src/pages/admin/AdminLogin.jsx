@@ -28,6 +28,8 @@ const AdminLogin = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
+    
     try {
       const res = await adminLogin({ email, password }).unwrap();
       dispatch(setAdminCredentials({ ...res }));
@@ -36,7 +38,7 @@ const AdminLogin = () => {
       toast.error(err?.data?.message || err.error);
     }
   };
-      
+
   return (
     <div className="min-h-screen bg-gray-300 flex items-center justify-center">
       <div className="relative mx-auto my-24 w-full max-w-md bg-white px-6 pt-10 pb-8 shadow-2xl ring-1 ring-gray-900/5 sm:rounded-xl sm:px-10">

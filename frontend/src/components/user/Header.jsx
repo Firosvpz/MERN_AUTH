@@ -31,7 +31,6 @@ const Header = () => {
         <ul className="flex space-x-5">
           {userInfo ? (
             <>
-              {" "}
               <Link to="/profile">
                 <li className="flex items-center">
                   <FaUser className="text-white mr-2 cursor-pointer hover:text-gray-200" />
