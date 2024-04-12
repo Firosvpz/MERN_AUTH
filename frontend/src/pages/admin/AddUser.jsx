@@ -1,31 +1,18 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { AiOutlineLock, AiOutlineMail, AiOutlineUser } from "react-icons/ai";
+import AdminHeader from "../../components/admin/AdminHeader";
+import { useEffect, useState } from "react";
+import { useAddUserMutation } from "../../slices/adminSlice/adminApiSlice";
 import { toast } from "react-toastify";
-import Loader from "../../components/user/Loader";
-import { setCredentials } from "../../slices/userSlice/authSlice";
-import { useUpdateUserMutation } from "../../slices/userSlice/usersApiSlice";
-import { AiOutlineUser, AiOutlineMail, AiOutlineLock } from "react-icons/ai";
-import Header from "../../components/user/Header";
 
-const Profile = () => {
+const AddUser = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [imageUrl, setImageUrl] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
 
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  const { userInfo } = useSelector((state) => state.auth);
-
-  const [updateProfile, { isLoading }] = useUpdateUserMutation();
-
-  useEffect(() => {
-    setName(userInfo.name);
-    setEmail(userInfo.email);
-  }, [userInfo.setName, userInfo.setEmail]);
+  const [addUser] = useAddUserMutation();
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -45,26 +32,25 @@ const Profile = () => {
           formData.append("image", selectedFile);
         }
 
-        const res = await updateProfile(formData).unwrap();
-        dispatch(setCredentials({ ...res }));
-        toast.success("Profile Updated");
+        const res = await addUser(formData).unwrap();
+        // console.log("res", res);
+        toast.success("User has been created successfully");
       } catch (err) {
         toast.error(err?.data?.message || err.error);
         console.log(err);
       }
     }
   };
-
   return (
     <>
-      <Header />
+      <AdminHeader />
       <div className="max-w-md mx-auto my-16 bg-white shadow-md rounded-md p-6">
         <h1 className="text-2xl font-bold mb-4 text-indigo-600">Profile</h1>
         <div className="flex justify-center mb-6">
           <div className="relative">
             {/* Image Display */}
             <img
-              src={userInfo.imageUrl}
+              src={imageUrl}
               alt="Profile Image"
               className="h-32 w-32 rounded-full object-cover"
             />
@@ -170,7 +156,7 @@ const Profile = () => {
             </div>
           </div>
 
-          {isLoading && <Loader />}
+          {/* {isLoading && <Loader />} */}
 
           <button
             type="submit"
@@ -184,4 +170,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default AddUser;

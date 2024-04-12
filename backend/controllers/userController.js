@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import generateToken from "../utils/generateToken.js";
 import User from "../models/userModel.js";
+import { cloudinary } from "../config/cloudinary.js";
 
 //@desc Auth user/set token
 //route POST /api/users/auth
@@ -11,8 +12,13 @@ const authUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
-    generateToken(res, user._id);
-    res.status(201).json({ _id: user._id, name: user.name, email: user.email });
+    generateToken(res, user._id, "userJWT");
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      imageUrl: user.imageUrl,
+    });
   } else {
     res.status(401);
     throw new Error("Invalid email or password");
@@ -39,8 +45,13 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
-    generateToken(res, user._id);
-    res.status(201).json({ _id: user._id, name: user.name, email: user.email });
+    generateToken(res, user._id, "userJWT");
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      imageUrl: user.imageUrl,
+    });
   } else {
     res.status(400);
     throw new Error("Invalid user data");
@@ -51,7 +62,7 @@ const registerUser = asyncHandler(async (req, res) => {
 //route POST /api/users/logout
 //@access Public
 const logoutUser = asyncHandler(async (req, res) => {
-  res.cookie("jwt", "", {
+  res.cookie("userJWT", "", {
     httpOnly: true,
     expires: new Date(0),
   });
@@ -67,6 +78,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
     _id: req.user._id,
     name: req.user.name,
     email: req.user.email,
+    imageUrl: req.user.imageUrl,
   };
 
   res.status(200).json(user);
@@ -77,26 +89,46 @@ const getUserProfile = asyncHandler(async (req, res) => {
 //@access Public
 const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
+  // console.log("body", req.body);
+  console.log("image", req.file);
 
   if (user) {
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
+
+    if (req.file) {
+      try {
+        if (user.imageUrl) {
+          const publicId = user.imageUrl.split("/").pop().split(".")[0]; 
+          await cloudinary.uploader.destroy(publicId); 
+        }
+        const res = await cloudinary.uploader.upload(req.file.path);
+        user.imageUrl = res.secure_url;
+        console.log("res", res);
+      } catch (err) {
+        console.log("Error uploading to cloudinary");
+        return res
+          .status(400)
+          .json({ error: "Image upload to cloudinary failed" });
+      }
+    }
 
     if (req.body.password) {
       user.password = req.body.password;
     }
 
     const updatedUser = await user.save();
+    console.log("updatedUser", updatedUser);
     res.status(200).json({
       _id: updatedUser._id,
       name: updatedUser.name,
       email: updatedUser.email,
+      imageUrl: updatedUser.imageUrl,
     });
   } else {
     res.status(404);
     throw new Error("User not found");
   }
-
   res.status(200).json({ message: "Update user profile" });
 });
 
