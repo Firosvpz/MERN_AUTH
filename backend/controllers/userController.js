@@ -89,22 +89,27 @@ const getUserProfile = asyncHandler(async (req, res) => {
 //@access Public
 const updateUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
-  // console.log("body", req.body);
-  console.log("image", req.file);
 
   if (user) {
+    const isPasswordCorrect = await user.matchPassword(
+      req.body.currentPassword
+    );
+    if (!isPasswordCorrect) {
+      console.log("matchPassword error")
+      return res.status(400).json({ error: "Current password is incorrect" });
+    }
+
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
 
     if (req.file) {
       try {
         if (user.imageUrl) {
-          const publicId = user.imageUrl.split("/").pop().split(".")[0]; 
-          await cloudinary.uploader.destroy(publicId); 
+          const publicId = user.imageUrl.split("/").pop().split(".")[0];
+          await cloudinary.uploader.destroy(publicId);
         }
         const res = await cloudinary.uploader.upload(req.file.path);
         user.imageUrl = res.secure_url;
-        console.log("res", res);
       } catch (err) {
         console.log("Error uploading to cloudinary");
         return res
@@ -118,7 +123,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     }
 
     const updatedUser = await user.save();
-    console.log("updatedUser", updatedUser);
+    // console.log("updatedUser", updatedUser);
     res.status(200).json({
       _id: updatedUser._id,
       name: updatedUser.name,

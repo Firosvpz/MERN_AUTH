@@ -7,10 +7,12 @@ import { setCredentials } from "../../slices/userSlice/authSlice";
 import { useUpdateUserMutation } from "../../slices/userSlice/usersApiSlice";
 import { AiOutlineUser, AiOutlineMail, AiOutlineLock } from "react-icons/ai";
 import Header from "../../components/user/Header";
+import editProfileValidate from "../../validations/editProfileValidate.js";
 
 const Profile = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -33,25 +35,38 @@ const Profile = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-    } else {
-      try {
-        const formData = new FormData();
-        formData.append("name", name);
-        formData.append("email", email);
-        formData.append("password", password);
-        if (selectedFile) {
-          formData.append("image", selectedFile);
-        }
 
-        const res = await updateProfile(formData).unwrap();
-        dispatch(setCredentials({ ...res }));
-        toast.success("Profile Updated");
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-        console.log(err);
+    const validationError = editProfileValidate(
+      name,
+      currentPassword,
+      password,
+      confirmPassword
+    );
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("currentPassword", currentPassword);
+      formData.append("password", password);
+      if (selectedFile) {
+        formData.append("image", selectedFile);
       }
+
+      const res = await updateProfile(formData).unwrap();
+      dispatch(setCredentials({ ...res }));
+      toast.success("Profile Updated");
+    } catch (err) {
+      if (err?.data?.error === "Current password is incorrect") {
+        toast.error("Current password is incorrect");
+      } else {
+        toast.error(err?.data?.message || err.error);
+      }
+      console.log(err);
     }
   };
 
@@ -125,11 +140,29 @@ const Profile = () => {
                 type="email"
                 placeholder="Enter email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                readOnly
                 className="block w-full pr-10 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                 <AiOutlineMail className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+
+          <div className="my-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Current Password
+            </label>
+            <div className="mt-1 relative rounded-md shadow-sm">
+              <input
+                type="password"
+                placeholder="Enter password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="block w-full pr-10 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300 rounded-md"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                <AiOutlineLock className="h-5 w-5" />
               </div>
             </div>
           </div>
