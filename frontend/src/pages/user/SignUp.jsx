@@ -25,7 +25,7 @@ const SignUp = () => {
     if (userInfo) {
       navigate("/");
     }
-  }, [navigate, userInfo]);
+  }, [navigate, userInfo]); 
 
   const submitHandler = async (e) => {
     e.preventDefault();

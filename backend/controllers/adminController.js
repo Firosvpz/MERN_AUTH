@@ -11,7 +11,7 @@ const authAdmin = asyncHandler(async (req, res) => {
 
   const admin = await User.findOne({ email });
 
-  if (admin && admin.isAdmin && admin.matchPassword(password)) {
+  if (admin && admin.isAdmin && (await admin.matchPassword(password))) {
     generateToken(res, admin._id, "adminJWT");
     res
       .status(201)

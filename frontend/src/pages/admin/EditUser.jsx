@@ -63,6 +63,8 @@ const EditUser = () => {
       try {
         const res = await updateUserData(formData).unwrap();
         toast.success("Profile Updated");
+        setName(res.name);
+        setImageUrl(res.imageUrl);
       } catch (err) {
         toast.error(err?.data?.message || err.error);
         console.log(err);

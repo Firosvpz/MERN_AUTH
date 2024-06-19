@@ -29,7 +29,6 @@ const AdminLogin = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    
     try {
       const res = await adminLogin({ email, password }).unwrap();
       dispatch(setAdminCredentials({ ...res }));

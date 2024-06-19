@@ -5,7 +5,6 @@ import { useAddUserMutation } from "../../slices/adminSlice/adminApiSlice";
 import { toast } from "react-toastify";
 import signUpValidate from "../../validations/signUpValidate.js";
 
-
 const AddUser = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

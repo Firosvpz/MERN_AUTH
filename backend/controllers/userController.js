@@ -95,7 +95,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       req.body.currentPassword
     );
     if (!isPasswordCorrect) {
-      console.log("matchPassword error")
+      console.log("matchPassword error");
       return res.status(400).json({ error: "Current password is incorrect" });
     }
 
@@ -105,6 +105,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     if (req.file) {
       try {
         if (user.imageUrl) {
+          console.log(user.imageUrl);
           const publicId = user.imageUrl.split("/").pop().split(".")[0];
           await cloudinary.uploader.destroy(publicId);
         }

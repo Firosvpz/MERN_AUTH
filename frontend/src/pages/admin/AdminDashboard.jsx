@@ -6,6 +6,7 @@ import {
   useDeleteUserMutation,
 } from "../../slices/adminSlice/adminApiSlice";
 import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -27,14 +28,27 @@ const AdminDashboard = () => {
   }, []);
 
   const handleDeleteUser = async (userId) => {
-    try {
-      const res = await deleteUser(userId);
-      setUsers(users.filter((user) => user._id !== userId));
-      toast.success("User deleted successfully");
-    } catch (err) {
-      toast.error("Failed to delete user");
-      console.log(err);
-    }
+    // Display SweetAlert confirmation dialog
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await deleteUser(userId);
+          setUsers(users.filter((user) => user._id !== userId));
+          toast.success("User deleted successfully");
+        } catch (err) {
+          toast.error("Failed to delete user");
+          console.log(err);
+        }
+      }
+    });
   };
 
   const handleSearchChange = (e) => {
@@ -73,6 +87,7 @@ const AdminDashboard = () => {
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr>
+              <th className="border border-gray-300 px-4 py-2">Image</th>
               <th className="border border-gray-300 px-4 py-2">Name</th>
               <th className="border border-gray-300 px-4 py-2">Email</th>
               <th className="border border-gray-300 px-4 py-2">Actions</th>
@@ -82,19 +97,26 @@ const AdminDashboard = () => {
             {filteredUsers.map((user) => (
               <tr key={user._id}>
                 <td className="border border-gray-300 px-4 py-2">
+                  <img
+                    src={user.imageUrl}
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full"
+                  />
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
                   {user.name}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   {user.email}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-4 py-2 ">
                   <Link to={`/admin/edit-user/${user._id}`}>
-                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">
+                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 ms-5">
                       Edit
                     </button>
                   </Link>
                   <button
-                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ms-5"
                     onClick={() => handleDeleteUser(user._id)}
                   >
                     Delete
